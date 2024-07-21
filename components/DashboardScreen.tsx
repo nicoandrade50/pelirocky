@@ -4,6 +4,7 @@ import { StackNavigationProp } from "@react-navigation/stack";
 import { useQuery, useMutation } from "react-query";
 import React, { useEffect, useState } from "react";
 import {
+  ActivityIndicator,
   FlatList,
   Modal,
   StyleSheet,
@@ -21,20 +22,6 @@ import {
   patchFilm,
 } from "../services/film-service";
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 type DashboardScreenNavigationProp = StackNavigationProp<
   RootStackParamList,
   "Dashboard"
@@ -48,9 +35,15 @@ const DashboardScreen: React.FC = () => {
   const [newFilmDirector, setNewFilmDirector] = useState("");
   const [newFilmduration, setNewFilmduration] = useState("");
 
-  const { data: filmList, refetch: refetchFilmList } = useQuery({
+  const {
+    data: filmList,
+    refetch: refetchFilmList,
+    isRefetching: isRefetchingFilmList,
+  } = useQuery({
     queryFn: getAllFilms,
+    queryKey: ["films"],
   });
+
   const { mutate: createFilmMutate } = useMutation(createFilm, {
     onSuccess: () => {
       refetchFilmList();
@@ -75,17 +68,11 @@ const DashboardScreen: React.FC = () => {
   };
 
   const handleDelete = (id: string) => {
-    // const newFilmList = filmList.filter((film) => film.id !== id);
-    // setFilmList(newFilmList);
     deleteFilmMutate(Number(id));
   };
 
   const handleSave = () => {
     if (currentFilm) {
-      // const newFilmList = filmList.map((film) =>
-      //   film.id === currentFilm.id ? { ...currentFilm } : film
-      // );
-      //setFilmList(newFilmList);
       const updateFilm: Partial<Film> = { ...currentFilm, id: undefined };
 
       patchFilmMutate({ id: Number(currentFilm.id), film: { ...updateFilm } });
@@ -95,13 +82,6 @@ const DashboardScreen: React.FC = () => {
   };
 
   const handleAddFilm = () => {
-    // const newFilm: Film = {
-    //   id: String(filmList.length + 1),
-    //   title: newFilmTitle,
-    //   director: newFilmDirector,
-    //   duration: newFilmduration,
-    // };
-    // setFilmList([...filmList, newFilm]);
     setModalVisible(false);
     setNewFilmTitle("");
     setNewFilmDirector("");
@@ -116,7 +96,9 @@ const DashboardScreen: React.FC = () => {
   };
 
   const renderItem = ({ item }: { item: Film }) => (
-    <TouchableOpacity onPress={() => navigation.navigate("Scenes")}>
+    <TouchableOpacity
+      onPress={() => navigation.navigate("Scenes", { filmId: Number(item.id) })}
+    >
       <View style={styles.card}>
         <View>
           <Text style={styles.cardTitle}>{item.title}</Text>
@@ -145,12 +127,15 @@ const DashboardScreen: React.FC = () => {
       </TouchableOpacity>
       <Text style={styles.header}>DASHBOARD</Text>
       <Text style={styles.subHeader}>FILMS</Text>
-      <FlatList
-        data={filmList}
-        renderItem={renderItem}
-        keyExtractor={(item) => item.id}
-        contentContainerStyle={styles.list}
-      />
+      {isRefetchingFilmList && <ActivityIndicator size="large" />}
+      {!isRefetchingFilmList && (
+        <FlatList
+          data={filmList}
+          renderItem={renderItem}
+          keyExtractor={(item) => item.id}
+          contentContainerStyle={styles.list}
+        />
+      )}
       <TouchableOpacity
         style={styles.fab}
         onPress={() => setModalVisible(true)}

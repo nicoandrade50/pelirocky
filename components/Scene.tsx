@@ -1,85 +1,139 @@
-import React, { useState } from 'react';
-import { View, Text, StyleSheet, TouchableOpacity, FlatList, Modal, TextInput } from 'react-native';
-import { MaterialIcons } from '@expo/vector-icons';
-import { useNavigation } from '@react-navigation/native';
-import { StackNavigationProp } from '@react-navigation/stack';
-import { RootStackParamList } from '../navigation/StackNavigator';
+import React, { useState } from "react";
+import {
+  View,
+  Text,
+  StyleSheet,
+  TouchableOpacity,
+  FlatList,
+  Modal,
+  TextInput,
+  ActivityIndicator,
+} from "react-native";
+import { MaterialIcons } from "@expo/vector-icons";
+import { RouteProp, useNavigation } from "@react-navigation/native";
+import { StackNavigationProp } from "@react-navigation/stack";
+import { RootStackParamList } from "../navigation/StackNavigator";
+import { Scene } from "../types/scene";
+import { useMutation, useQuery } from "react-query";
+import {
+  createNewScene,
+  deleteSceneById,
+  getAllScenesByFilmId,
+  patchScene,
+} from "../services/scene-service";
+import showAlert from "../utils/alert";
 
-type Scene = {
-  id: string;
-  description: string;
-  cost: string;
-  stock: string;
+type DashboardScreenNavigationProp = StackNavigationProp<
+  RootStackParamList,
+  "Scenes"
+>;
+
+type DashboardScreenRouteProp = RouteProp<RootStackParamList, "Scenes">;
+
+type Props = {
+  route: DashboardScreenRouteProp;
+  navigation: DashboardScreenNavigationProp;
 };
 
-const initialScenes: Scene[] = [
-  { id: '1', description: 'Scene 1', cost: 'Parte interesante', stock: 'Involucrados' },
-  { id: '2', description: 'Scene 2', cost: 'Parte interesante', stock: 'Involucrados' },
-  { id: '3', description: 'Scene 3', cost: 'Parte interesante', stock: 'Involucrados' },
-];
+const DashboardScene: React.FC<Props> = ({ route }) => {
+  const filmId = route.params?.filmId;
 
-type DashboardScreenNavigationProp = StackNavigationProp<RootStackParamList, 'Dashboard'>;
-
-const DashboardScene: React.FC = () => {
   const navigation = useNavigation<DashboardScreenNavigationProp>();
-  const [scenes, setScenes] = useState<Scene[]>(initialScenes);
+
   const [modalVisible, setModalVisible] = useState(false);
   const [currentScene, setCurrentScene] = useState<Scene | null>(null);
-  const [editedDescription, setEditedDescription] = useState('');
-  const [editedCost, setEditedCost] = useState('');
-  const [editedStock, setEditedStock] = useState('');
+  const [editedDescription, setEditedDescription] = useState("");
+  const [editedBudget, setEditedBudget] = useState("");
+  const [editedMinutes, setEditedMinutes] = useState("");
   const [isEditing, setIsEditing] = useState(false);
+
+  const {
+    data: sceneList,
+    refetch: refetchSceneList,
+    isRefetching: isRefetchingSceneList,
+  } = useQuery({
+    queryFn: () => getAllScenesByFilmId(filmId as number),
+    queryKey: ["scenes", filmId],
+  });
+
+  const { mutate: createNewSceneMutate } = useMutation(createNewScene, {
+    onSuccess: () => {
+      refetchSceneList();
+    },
+    onError: (err) => {
+      showAlert((err as any).message);
+    },
+  });
+
+  const { mutate: deleteSceneByIdMutate } = useMutation(deleteSceneById, {
+    onSuccess: () => {
+      refetchSceneList();
+    },
+    onError: (err) => {
+      showAlert((err as any).message);
+    },
+  });
+
+  const { mutate: patchFilmMutate } = useMutation(patchScene, {
+    onSuccess: () => {
+      refetchSceneList();
+    },
+  });
 
   const handleEdit = (scene: Scene) => {
     setCurrentScene(scene);
     setEditedDescription(scene.description);
-    setEditedCost(scene.cost);
-    setEditedStock(scene.stock);
+    setEditedBudget(String(scene.budget));
+    setEditedMinutes(String(scene.minutes));
     setIsEditing(true);
     setModalVisible(true);
   };
 
   const handleDelete = (id: string) => {
-    const newScenes = scenes.filter(scene => scene.id !== id);
-    setScenes(newScenes);
+    deleteSceneByIdMutate(Number(id));
   };
 
   const handleSave = () => {
     if (isEditing && currentScene) {
-      const updatedScene: Scene = {
+      const updatedScene: Partial<Scene> = {
         ...currentScene,
-        description: editedDescription,
-        cost: editedCost,
-        stock: editedStock,
+        id: undefined,
+        film: undefined,
+        filmId: undefined,
       };
-      const updatedScenes = scenes.map(scene =>
-        scene.id === currentScene.id ? updatedScene : scene
-      );
-      setScenes(updatedScenes);
+
+      patchFilmMutate({
+        id: Number(currentScene.id),
+        scene: { ...updatedScene },
+      });
     } else {
-      const newScene: Scene = {
-        id: (scenes.length + 1).toString(),
+      createNewSceneMutate({
         description: editedDescription,
-        cost: editedCost,
-        stock: editedStock,
-      };
-      setScenes([...scenes, newScene]);
+        budget: Number(editedBudget),
+        minutes: Number(editedBudget),
+        id: "",
+        filmId,
+      });
     }
     setModalVisible(false);
     setCurrentScene(null);
-    setEditedDescription('');
-    setEditedCost('');
-    setEditedStock('');
+    setEditedDescription("");
+    setEditedBudget("");
+    setEditedMinutes("");
     setIsEditing(false);
   };
 
   const renderItem = ({ item }: { item: Scene }) => (
-    <TouchableOpacity onPress={() => navigation.navigate('Characters')}>
+    <TouchableOpacity
+      onPress={() =>
+        navigation.navigate("Characters", { sceneId: Number(item.id) })
+      }
+    >
       <View style={styles.card}>
         <View>
           <Text style={styles.cardTitle}>{item.description}</Text>
-          <Text style={styles.cardSubtitle}>{item.cost}</Text>
-          <Text style={styles.cardSubtitle}>{item.stock}</Text>
+          <Text style={styles.cardSubtitle}>{item.budget}</Text>
+          <Text style={styles.cardSubtitle}>{item.minutes}</Text>
         </View>
         <View style={styles.cardActions}>
           <TouchableOpacity onPress={() => handleEdit(item)}>
@@ -95,9 +149,9 @@ const DashboardScene: React.FC = () => {
 
   const handleAdd = () => {
     setCurrentScene(null);
-    setEditedDescription('');
-    setEditedCost('');
-    setEditedStock('');
+    setEditedDescription("");
+    setEditedBudget("");
+    setEditedMinutes("");
     setIsEditing(false);
     setModalVisible(true);
   };
@@ -111,12 +165,15 @@ const DashboardScene: React.FC = () => {
         <Text style={styles.header}>FILM 1</Text>
       </View>
       <Text style={styles.subHeader}>SCENES</Text>
-      <FlatList
-        data={scenes}
-        renderItem={renderItem}
-        keyExtractor={item => item.id}
-        contentContainerStyle={styles.list}
-      />
+      {isRefetchingSceneList && <ActivityIndicator size="large" />}
+      {!isRefetchingSceneList && (
+        <FlatList
+          data={sceneList}
+          renderItem={renderItem}
+          keyExtractor={(item) => item.id}
+          contentContainerStyle={styles.list}
+        />
+      )}
       <TouchableOpacity style={styles.fab} onPress={handleAdd}>
         <MaterialIcons name="add" size={24} color="black" />
       </TouchableOpacity>
@@ -131,24 +188,44 @@ const DashboardScene: React.FC = () => {
         }}
       >
         <View style={styles.modalView}>
-          <Text style={styles.modalText}>{isEditing ? 'Editar Escena' : 'Agregar Escena'}</Text>
+          <Text style={styles.modalText}>
+            {isEditing ? "Editar Escena" : "Agregar Escena"}
+          </Text>
           <TextInput
             style={styles.input}
             placeholder="Descripción"
-            value={editedDescription}
-            onChangeText={text => setEditedDescription(text)}
+            value={currentScene ? currentScene.description : editedDescription}
+            onChangeText={(text) => {
+              currentScene
+                ? setCurrentScene({ ...currentScene, description: text })
+                : setEditedDescription(text);
+            }}
           />
           <TextInput
             style={styles.input}
             placeholder="Costo"
-            value={editedCost}
-            onChangeText={text => setEditedCost(text)}
+            value={
+              currentScene ? String(currentScene.budget) : String(editedBudget)
+            }
+            onChangeText={(text) =>
+              currentScene
+                ? setCurrentScene({ ...currentScene, budget: Number(text) })
+                : setEditedBudget(text)
+            }
           />
           <TextInput
             style={styles.input}
-            placeholder="Stock"
-            value={editedStock}
-            onChangeText={text => setEditedStock(text)}
+            placeholder="Minutos"
+            value={
+              currentScene
+                ? String(currentScene.minutes)
+                : String(editedMinutes)
+            }
+            onChangeText={(text) =>
+              currentScene
+                ? setCurrentScene({ ...currentScene, minutes: Number(text) })
+                : setEditedMinutes(text)
+            }
           />
           <TouchableOpacity style={styles.saveButton} onPress={handleSave}>
             <Text style={styles.saveButtonText}>Guardar</Text>
@@ -162,70 +239,70 @@ const DashboardScene: React.FC = () => {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: 'black',
+    backgroundColor: "black",
     padding: 20,
   },
   headerContainer: {
-    flexDirection: 'row',
-    alignItems: 'center',
+    flexDirection: "row",
+    alignItems: "center",
     marginBottom: 20,
   },
   header: {
     fontSize: 24,
-    color: 'white',
-    fontWeight: 'bold',
+    color: "white",
+    fontWeight: "bold",
     marginLeft: 10,
   },
   subHeader: {
     fontSize: 20,
-    color: 'white',
-    fontWeight: 'bold',
+    color: "white",
+    fontWeight: "bold",
     marginBottom: 20,
   },
   list: {
     paddingBottom: 80,
   },
   card: {
-    backgroundColor: 'red',
+    backgroundColor: "red",
     padding: 15,
     borderRadius: 10,
     marginBottom: 15,
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
+    flexDirection: "row",
+    justifyContent: "space-between",
+    alignItems: "center",
   },
   cardTitle: {
     fontSize: 18,
-    color: 'black',
-    fontWeight: 'bold',
+    color: "black",
+    fontWeight: "bold",
   },
   cardSubtitle: {
     fontSize: 14,
-    color: 'black',
+    color: "black",
   },
   cardActions: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
+    flexDirection: "row",
+    justifyContent: "space-between",
     width: 50,
   },
   fab: {
-    position: 'absolute',
+    position: "absolute",
     bottom: 20,
     right: 20,
-    backgroundColor: '#800F2F',
+    backgroundColor: "#800F2F",
     borderRadius: 30,
     width: 60,
     height: 60,
-    justifyContent: 'center',
-    alignItems: 'center',
+    justifyContent: "center",
+    alignItems: "center",
   },
   modalView: {
     margin: 20,
-    backgroundColor: 'white',
+    backgroundColor: "white",
     borderRadius: 20,
     padding: 35,
-    alignItems: 'center',
-    shadowColor: '#000',
+    alignItems: "center",
+    shadowColor: "#000",
     shadowOffset: {
       width: 0,
       height: 2,
@@ -236,27 +313,27 @@ const styles = StyleSheet.create({
   },
   modalText: {
     marginBottom: 15,
-    textAlign: 'center',
+    textAlign: "center",
     fontSize: 24,
-    fontWeight: 'bold',
+    fontWeight: "bold",
   },
   input: {
     height: 40,
-    borderColor: 'gray',
+    borderColor: "gray",
     borderWidth: 1,
     marginBottom: 10,
     paddingLeft: 10,
-    width: '100%',
+    width: "100%",
   },
   saveButton: {
-    backgroundColor: '#800F2F',
+    backgroundColor: "#800F2F",
     padding: 10,
     borderRadius: 10,
   },
   saveButtonText: {
-    color: 'white',
+    color: "white",
     fontSize: 16,
-    textAlign: 'center',
+    textAlign: "center",
   },
 });
 
