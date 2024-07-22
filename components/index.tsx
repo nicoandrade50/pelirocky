@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { View, Text, StyleSheet, TouchableOpacity } from 'react-native';
+import { View, Text, StyleSheet, TouchableOpacity, TextInput, Alert } from 'react-native';
 import { Picker } from '@react-native-picker/picker';
 import { StackNavigationProp } from '@react-navigation/stack';
 import { useNavigation } from '@react-navigation/native';
@@ -10,6 +10,17 @@ type IndexScreenNavigationProp = StackNavigationProp<RootStackParamList, 'Index'
 const IndexScreen: React.FC = () => {
   const navigation = useNavigation<IndexScreenNavigationProp>();
   const [selectedMovie, setSelectedMovie] = useState<string>('Rocky I');
+  const [username, setUsername] = useState<string>('');
+  const [password, setPassword] = useState<string>('');
+
+  const handleLogin = () => {
+    // Puedes reemplazar esta lógica con una llamada real a una API de inicio de sesión
+    if (username === 'user' && password === 'password') {
+      navigation.navigate('Dashboard');
+    } else {
+      Alert.alert('Error', 'Credenciales incorrectas');
+    }
+  };
 
   return (
     <View style={styles.container}>
@@ -31,6 +42,24 @@ const IndexScreen: React.FC = () => {
           <Picker.Item label="Rocky V" value="Rocky V" />
           <Picker.Item label="Rocky Balboa" value="Rocky Balboa" />
         </Picker>
+      </View>
+      <View style={styles.loginContainer}>
+        <TextInput
+          style={styles.input}
+          placeholder="Nombre de usuario"
+          value={username}
+          onChangeText={(text) => setUsername(text)}
+        />
+        <TextInput
+          style={styles.input}
+          placeholder="Contraseña"
+          secureTextEntry
+          value={password}
+          onChangeText={(text) => setPassword(text)}
+        />
+        <TouchableOpacity style={styles.loginButton} onPress={handleLogin}>
+          <Text style={styles.loginButtonText}>Iniciar sesión</Text>
+        </TouchableOpacity>
       </View>
       <TouchableOpacity style={styles.button} onPress={() => navigation.navigate('Dashboard')}>
         <Text style={styles.buttonText}>Punch</Text>
@@ -72,6 +101,28 @@ const styles = StyleSheet.create({
     width: 200,
     color: '#FFFFFF',
     backgroundColor: '#444444',
+  },
+  loginContainer: {
+    width: '80%',
+    marginBottom: 20,
+  },
+  input: {
+    height: 40,
+    borderColor: '#FFFFFF',
+    borderBottomWidth: 1,
+    color: '#FFFFFF',
+    marginBottom: 15,
+    paddingHorizontal: 10,
+  },
+  loginButton: {
+    backgroundColor: '#c70039',
+    paddingVertical: 0,
+    borderRadius: 0,
+  },
+  loginButtonText: {
+    fontSize: 0,
+    color: '#FFFFFF',
+    textAlign: 'center',
   },
   button: {
     backgroundColor: '#c70039',

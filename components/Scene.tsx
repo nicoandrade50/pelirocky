@@ -43,7 +43,7 @@ const DashboardScene: React.FC<Props> = ({ route }) => {
   const [modalVisible, setModalVisible] = useState(false);
   const [currentScene, setCurrentScene] = useState<Scene | null>(null);
   const [editedDescription, setEditedDescription] = useState("");
-  const [editedBudget, setEditedBudget] = useState("");
+  const [editedLocation, setEditedLocation] = useState("");
   const [editedMinutes, setEditedMinutes] = useState("");
   const [isEditing, setIsEditing] = useState(false);
 
@@ -83,7 +83,7 @@ const DashboardScene: React.FC<Props> = ({ route }) => {
   const handleEdit = (scene: Scene) => {
     setCurrentScene(scene);
     setEditedDescription(scene.description);
-    setEditedBudget(String(scene.budget));
+    setEditedLocation(String(scene.location));
     setEditedMinutes(String(scene.minutes));
     setIsEditing(true);
     setModalVisible(true);
@@ -109,8 +109,8 @@ const DashboardScene: React.FC<Props> = ({ route }) => {
     } else {
       createNewSceneMutate({
         description: editedDescription,
-        budget: Number(editedBudget),
-        minutes: Number(editedBudget),
+        location: String(editedLocation),
+        minutes: Number(editedMinutes),
         id: "",
         filmId,
       });
@@ -118,7 +118,7 @@ const DashboardScene: React.FC<Props> = ({ route }) => {
     setModalVisible(false);
     setCurrentScene(null);
     setEditedDescription("");
-    setEditedBudget("");
+    setEditedLocation("");
     setEditedMinutes("");
     setIsEditing(false);
   };
@@ -132,7 +132,7 @@ const DashboardScene: React.FC<Props> = ({ route }) => {
       <View style={styles.card}>
         <View>
           <Text style={styles.cardTitle}>{item.description}</Text>
-          <Text style={styles.cardSubtitle}>{item.budget}</Text>
+          <Text style={styles.cardSubtitle}>{item.location}</Text>
           <Text style={styles.cardSubtitle}>{item.minutes}</Text>
         </View>
         <View style={styles.cardActions}>
@@ -150,7 +150,7 @@ const DashboardScene: React.FC<Props> = ({ route }) => {
   const handleAdd = () => {
     setCurrentScene(null);
     setEditedDescription("");
-    setEditedBudget("");
+    setEditedLocation("");
     setEditedMinutes("");
     setIsEditing(false);
     setModalVisible(true);
@@ -162,9 +162,9 @@ const DashboardScene: React.FC<Props> = ({ route }) => {
         <TouchableOpacity onPress={() => navigation.goBack()}>
           <MaterialIcons name="arrow-back" size={24} color="white" />
         </TouchableOpacity>
-        <Text style={styles.header}>FILM 1</Text>
+        <Text style={styles.header}>FILM </Text>
       </View>
-      <Text style={styles.subHeader}>SCENES</Text>
+      <Text style={styles.subHeader}>SCENES 🥊</Text>
       {isRefetchingSceneList && <ActivityIndicator size="large" />}
       {!isRefetchingSceneList && (
         <FlatList
@@ -203,19 +203,20 @@ const DashboardScene: React.FC<Props> = ({ route }) => {
           />
           <TextInput
             style={styles.input}
-            placeholder="Costo"
+            placeholder="Location"
             value={
-              currentScene ? String(currentScene.budget) : String(editedBudget)
+              currentScene ? String(currentScene.location) : String(editedLocation)
             }
             onChangeText={(text) =>
               currentScene
-                ? setCurrentScene({ ...currentScene, budget: Number(text) })
-                : setEditedBudget(text)
+                ? setCurrentScene({ ...currentScene, location: String(text) })
+                : setEditedLocation(text)
             }
           />
-          <TextInput
+
+           <TextInput
             style={styles.input}
-            placeholder="Minutos"
+            placeholder="minutes"
             value={
               currentScene
                 ? String(currentScene.minutes)
@@ -227,6 +228,8 @@ const DashboardScene: React.FC<Props> = ({ route }) => {
                 : setEditedMinutes(text)
             }
           />
+
+
           <TouchableOpacity style={styles.saveButton} onPress={handleSave}>
             <Text style={styles.saveButtonText}>Guardar</Text>
           </TouchableOpacity>

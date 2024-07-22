@@ -126,7 +126,7 @@ const DashboardScreen: React.FC = () => {
         <MaterialCommunityIcons name="arrow-left" size={24} color="white" />
       </TouchableOpacity>
       <Text style={styles.header}>DASHBOARD</Text>
-      <Text style={styles.subHeader}>FILMS</Text>
+      <Text style={styles.subHeader}>FILMS🥊</Text>
       {isRefetchingFilmList && <ActivityIndicator size="large" />}
       {!isRefetchingFilmList && (
         <FlatList
@@ -140,7 +140,7 @@ const DashboardScreen: React.FC = () => {
         style={styles.fab}
         onPress={() => setModalVisible(true)}
       >
-        <MaterialCommunityIcons name="plus" size={24} color="white" />
+        <MaterialCommunityIcons name="plus" size={24} color="black" />
       </TouchableOpacity>
       <Modal
         animationType="slide"

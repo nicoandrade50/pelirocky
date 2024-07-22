@@ -43,8 +43,8 @@ const DashboardCharacter: React.FC<Props> = ({ route }) => {
     null
   );
   const [editedDescription, setEditedDescription] = useState("");
-  const [editedCost, setEditedCost] = useState("");
-  const [editedStock, setEditedStock] = useState("");
+  const [editedGender, setEditedGender] = useState("");
+  const [editedStatus, setEditedStatus] = useState("");
   const [isEditing, setIsEditing] = useState(false);
 
   const {
@@ -80,8 +80,8 @@ const DashboardCharacter: React.FC<Props> = ({ route }) => {
   const handleEdit = (character: Character) => {
     setCurrentCharacter(character);
     setEditedDescription(character.description);
-    setEditedCost(String(character.cost));
-    setEditedStock(String(character.stock));
+    setEditedGender(String(character.gender));
+    setEditedStatus(String(character.status));
     setIsEditing(true);
     setModalVisible(true);
   };
@@ -106,17 +106,17 @@ const DashboardCharacter: React.FC<Props> = ({ route }) => {
     } else {
       createNewCharacterMutate({
         id: "",
-        cost: Number(editedCost),
+        gender: String(editedGender),
         description: editedDescription,
-        stock: Number(editedStock),
+        status: String(editedStatus),
         sceneId,
       });
     }
     setModalVisible(false);
     setCurrentCharacter(null);
     setEditedDescription("");
-    setEditedCost("");
-    setEditedStock("");
+    setEditedGender("");
+    setEditedStatus("");
     setIsEditing(false);
   };
 
@@ -125,8 +125,8 @@ const DashboardCharacter: React.FC<Props> = ({ route }) => {
       <View style={styles.card}>
         <View>
           <Text style={styles.cardTitle}>{item.description}</Text>
-          <Text style={styles.cardSubtitle}>{item.cost}</Text>
-          <Text style={styles.cardSubtitle}>{item.stock}</Text>
+          <Text style={styles.cardSubtitle}>{item.gender}</Text>
+          <Text style={styles.cardSubtitle}>{item.status}</Text>
         </View>
         <View style={styles.cardActions}>
           <TouchableOpacity onPress={() => handleEdit(item)}>
@@ -143,8 +143,8 @@ const DashboardCharacter: React.FC<Props> = ({ route }) => {
   const handleAdd = () => {
     setCurrentCharacter(null);
     setEditedDescription("");
-    setEditedCost("");
-    setEditedStock("");
+    setEditedGender("");
+    setEditedStatus("");
     setIsEditing(false);
     setModalVisible(true);
   };
@@ -155,7 +155,7 @@ const DashboardCharacter: React.FC<Props> = ({ route }) => {
         <TouchableOpacity onPress={() => navigation.goBack()}>
           <MaterialIcons name="arrow-back" size={24} color="white" />
         </TouchableOpacity>
-        <Text style={styles.header}>Scene 1</Text>
+        <Text style={styles.header}>Scene 1 🥊</Text>
       </View>
       {isRefetchingCharacterList && <ActivityIndicator size="large" />}
       {!isRefetchingCharacterList && (
@@ -186,7 +186,7 @@ const DashboardCharacter: React.FC<Props> = ({ route }) => {
 
           <TextInput
             style={styles.input}
-            placeholder="Descripción"
+            placeholder="Description"
             value={
               currentCharacter
                 ? currentCharacter.description
@@ -203,32 +203,32 @@ const DashboardCharacter: React.FC<Props> = ({ route }) => {
           />
           <TextInput
             style={styles.input}
-            placeholder="Costo"
+            placeholder="gender"
             value={
-              currentCharacter ? String(currentCharacter.cost) : editedCost
+              currentCharacter ? String(currentCharacter.gender) : editedGender
             }
             onChangeText={(text) =>
               currentCharacter
                 ? setCurrentCharacter({
                     ...currentCharacter,
-                    cost: Number(text),
+                    gender: String(text),
                   })
-                : setEditedCost(text)
+                : setEditedGender(text)
             }
           />
           <TextInput
             style={styles.input}
-            placeholder="Stock"
+            placeholder="status"
             value={
-              currentCharacter ? String(currentCharacter.stock) : editedStock
+              currentCharacter ? String(currentCharacter.status) : editedStatus
             }
             onChangeText={(text) =>
               currentCharacter
                 ? setCurrentCharacter({
                     ...currentCharacter,
-                    stock: Number(text),
+                    status: String(text),
                   })
-                : setEditedStock(text)
+                : setEditedStatus(text)
             }
           />
           <TouchableOpacity style={styles.saveButton} onPress={handleSave}>

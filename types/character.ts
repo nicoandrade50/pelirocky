@@ -3,8 +3,8 @@ import { Scene } from "./scene";
 export interface Character {
   id: string;
   description: string;
-  cost: number;
-  stock: number;
+  gender: string;
+  status: string;
   sceneId?: number;
   scene?: Scene;
 }
